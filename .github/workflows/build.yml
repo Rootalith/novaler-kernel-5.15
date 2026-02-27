@@ -4,7 +4,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Dependencies
         run: sudo apt update && sudo apt install -y gcc-arm-linux-gnueabihf u-boot-tools libssl-dev bc bison flex make
 
@@ -29,7 +29,7 @@ jobs:
           mkimage -A arm -O linux -T kernel -C none -a 0x00008000 -e 0x00008000 -n "Novaler-5.15" -d arch/arm/boot/zImage uImage
 
       - name: Upload Results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: Novaler-Output
           path: |
