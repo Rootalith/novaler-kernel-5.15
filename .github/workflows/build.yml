@@ -5,8 +5,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      
+      - name: Cache Compiler
+        uses: actions/cache@v4
+        with:
+          path: ~/.ccache
+          key: ${{ runner.os }}-ccache-${{ github.sha }}
+          restore-keys: ${{ runner.os }}-ccache-
+
       - name: Dependencies
-        run: sudo apt update && sudo apt install -y gcc-arm-linux-gnueabihf u-boot-tools libssl-dev bc bison flex make
+        run: sudo apt update && sudo apt install -y gcc-arm-linux-gnueabihf u-boot-tools libssl-dev bc bison flex make ccache
 
       - name: Get Kernel 5.15.5
         run: |
@@ -17,21 +25,23 @@ jobs:
       - name: Inject Novaler Files
         run: |
           cp arch/arm/boot/dts/hisilicon/* source/arch/arm/boot/dts/
+          cp arch/arm/configs/novaler4k_defconfig source/arch/arm/configs/
           echo 'dtb-$(CONFIG_ARCH_HISI) += hi3798mv200-novaler4k.dtb' >> source/arch/arm/boot/dts/Makefile
 
       - name: Compile
         run: |
           cd source
           export ARCH=arm
-          export CROSS_COMPILE=arm-linux-gnueabihf-
-          make multi_v7_defconfig
-          make -j$(nproc) zImage dtbs
-          mkimage -A arm -O linux -T kernel -C none -a 0x00008000 -e 0x00008000 -n "Novaler-5.15" -d arch/arm/boot/zImage uImage
+          export CROSS_COMPILE="ccache arm-linux-gnueabihf-"
+          make novaler4k_defconfig
+          make -j$(nproc) uImage dtbs
+          # Organizing for Enigma2-style Recovery Flash
+          mkdir -p recovery/novaler
+          cp arch/arm/boot/uImage recovery/novaler/
+          cp arch/arm/boot/dts/hi3798mv200-novaler4k.dtb recovery/novaler/
 
-      - name: Upload Results
+      - name: Upload Recovery Image
         uses: actions/upload-artifact@v4
         with:
-          name: Novaler-Output
-          path: |
-            source/uImage
-            source/arch/arm/boot/dts/hi3798mv200-novaler4k.dtb
+          name: Novaler-Recovery-Flash
+          path: source/recovery/
