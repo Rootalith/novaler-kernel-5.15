@@ -1,0 +1,36 @@
+/ {
+#address-cells = <1>;
+#size-cells = <1>;
+cpus {
+#address-cells = <1>;
+#size-cells = <0>;
+cpu0: cpu@0 {
+device_type = "cpu";
+compatible = "arm,cortex-a53";
+reg = <0x0>;
+enable-method = "psci";
+};
+};
+psci {
+compatible = "arm,psci-1.0", "arm,psci-0.2";
+method = "smc";
+};
+soc {
+compatible = "simple-bus";
+#address-cells = <1>;
+#size-cells = <1>;
+ranges;
+gic: interrupt-controller@10301000 {
+compatible = "arm,gic-400";
+#interrupt-cells = <3>;
+interrupt-controller;
+reg = <0x10301000 0x1000>, <0x10302000 0x2000>;
+};
+uart0: serial@12100000 {
+compatible = "arm,pl011", "arm,primecell";
+reg = <0x12100000 0x1000>;
+interrupts = <0 40 4>;
+status = "disabled";
+};
+};
+};

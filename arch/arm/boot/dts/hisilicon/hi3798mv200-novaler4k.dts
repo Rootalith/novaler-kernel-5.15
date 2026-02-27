@@ -1,0 +1,21 @@
+/dts-v1/;
+#include "hi3798mv200.dtsi"
+
+/ {
+model = "Novaler 4K";
+compatible = "novaler,4k", "hisilicon,hi3798mv200";
+
+memory@0 {
+device_type = "memory";
+reg = <0x00000000 0x40000000>; /* 1GB RAM */
+};
+
+chosen {
+stdout-path = "serial0:115200n8";
+bootargs = "console=ttyAMA0,115200 root=/dev/mmcblk0p9 rootwait panic=10";
+};
+};
+
+&uart0 {
+status = "okay";
+};

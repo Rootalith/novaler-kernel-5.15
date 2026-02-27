@@ -1,0 +1,37 @@
+name: Build Novaler Kernel 5.15.5
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Dependencies
+        run: sudo apt update && sudo apt install -y gcc-arm-linux-gnueabihf u-boot-tools libssl-dev bc bison flex make
+
+      - name: Get Kernel 5.15.5
+        run: |
+          wget https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-5.15.5.tar.xz
+          tar -xf linux-5.15.5.tar.xz
+          mv linux-5.15.5 source
+
+      - name: Inject Novaler Files
+        run: |
+          cp arch/arm/boot/dts/hisilicon/* source/arch/arm/boot/dts/
+          echo 'dtb-$(CONFIG_ARCH_HISI) += hi3798mv200-novaler4k.dtb' >> source/arch/arm/boot/dts/Makefile
+
+      - name: Compile
+        run: |
+          cd source
+          export ARCH=arm
+          export CROSS_COMPILE=arm-linux-gnueabihf-
+          make multi_v7_defconfig
+          make -j$(nproc) zImage dtbs
+          mkimage -A arm -O linux -T kernel -C none -a 0x00008000 -e 0x00008000 -n "Novaler-5.15" -d arch/arm/boot/zImage uImage
+
+      - name: Upload Results
+        uses: actions/upload-artifact@v3
+        with:
+          name: Novaler-Output
+          path: |
+            source/uImage
+            source/arch/arm/boot/dts/hi3798mv200-novaler4k.dtb
